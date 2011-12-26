@@ -123,7 +123,11 @@ public class RESTLoader extends AsyncTaskLoader<RESTLoader.RESTResponse> {
                     request = new HttpPost();
                     request.setURI(new URI(mAction.toString()));
                     
-                    // Attach form entity if necessary.
+                    // Attach form entity if necessary. Note: some REST APIs
+                    // require you to POST JSON. This is easy to do, simply use
+                    // postRequest.setHeader('Content-Type', 'application/json')
+                    // and StringEntity instead. Same thing for the PUT case 
+                    // below.
                     HttpPost postRequest = (HttpPost) request;
                     
                     if (mParams != null) {
@@ -138,11 +142,11 @@ public class RESTLoader extends AsyncTaskLoader<RESTLoader.RESTResponse> {
                     request.setURI(new URI(mAction.toString()));
                     
                     // Attach form entity if necessary.
-                    HttpPut postRequest = (HttpPut) request;
+                    HttpPut putRequest = (HttpPut) request;
                     
                     if (mParams != null) {
                         UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(paramsToList(mParams));
-                        postRequest.setEntity(formEntity);
+                        putRequest.setEntity(formEntity);
                     }
                 }
                 break;
