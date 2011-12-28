@@ -10,15 +10,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import android.app.ListActivity;
-import android.app.LoaderManager.LoaderCallbacks;
-import android.content.Intent;
-import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ListFragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
@@ -29,7 +29,7 @@ import android.widget.Toast;
  * @author Neil Goodman
  *
  */
-public class RESTLoaderActivity extends ListActivity implements LoaderCallbacks<RESTLoader.RESTResponse> {
+public class RESTLoaderActivity extends FragmentActivity implements LoaderCallbacks<RESTLoader.RESTResponse> {
     private static final String TAG = RESTLoaderActivity.class.getName();
     
     private static final int LOADER_TWITTER_SEARCH = 0x1;
@@ -37,12 +37,28 @@ public class RESTLoaderActivity extends ListActivity implements LoaderCallbacks<
     private static final String ARGS_URI    = "net.neilgoodman.android.restloadertutorial.ARGS_URI";
     private static final String ARGS_PARAMS = "net.neilgoodman.android.restloadertutorial.ARGS_PARAMS";
     
+    private ArrayAdapter<String> mAdapter;
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_rest_loader);
+        
+        // Since we are using the Android Compatibility library
+        // we have to use FragmentActivity. So, we use ListFragment
+        // to get the same functionality as ListActivity.
+        FragmentManager fm = getSupportFragmentManager();
+        
+        ListFragment list = new ListFragment();
+        
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.add(R.id.fragment_content, list);
+        ft.commit();
+        
+        mAdapter = new ArrayAdapter<String>(this, R.layout.item_label_list);
         
         // Let's set our list adapter to a simple ArrayAdapter.
-        setListAdapter(new ArrayAdapter<String>(this, R.layout.item_label_list));
+        list.setListAdapter(mAdapter);
         
         // This is our REST action.
         Uri twitterSearchUri = Uri.parse("http://search.twitter.com/search.json");
@@ -56,30 +72,13 @@ public class RESTLoaderActivity extends ListActivity implements LoaderCallbacks<
         // These are the loader arguments. They are stored in a Bundle because
         // LoaderManager will maintain the state of our Loaders for us and
         // reload the Loader if necessary. This is the whole reason why
-        // we have even bothered to implment RESTLoader.
+        // we have even bothered to implement RESTLoader.
         Bundle args = new Bundle();
         args.putParcelable(ARGS_URI, twitterSearchUri);
         args.putParcelable(ARGS_PARAMS, params);
         
         // Initialize the Loader.
-        getLoaderManager().initLoader(LOADER_TWITTER_SEARCH, args, this);
-    }
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                // You can ignore this. I just want to do a little
-                // shameless self promoting by sending users to my blog
-                // if they press the home button on the Actionbar.
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("http://neilgoodman.net"));
-                startActivity(intent);
-                return true;
-                
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+        getSupportLoaderManager().initLoader(LOADER_TWITTER_SEARCH, args, this);
     }
 
     @Override
@@ -109,9 +108,10 @@ public class RESTLoaderActivity extends ListActivity implements LoaderCallbacks<
             List<String> tweets = getTweetsFromJson(json);
             
             // Load our list adapter with our Tweets.
-            ArrayAdapter<String> adapter = (ArrayAdapter<String>) getListAdapter();
-            adapter.clear();
-            adapter.addAll(tweets);
+            mAdapter.clear();
+            for (String tweet : tweets) {
+                mAdapter.add(tweet);
+            }
         }
         else {
             Toast.makeText(this, "Failed to load Twitter data. Check your internet settings.", Toast.LENGTH_SHORT).show();
