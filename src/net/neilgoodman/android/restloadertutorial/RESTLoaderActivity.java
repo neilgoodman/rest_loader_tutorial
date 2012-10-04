@@ -49,11 +49,14 @@ public class RESTLoaderActivity extends FragmentActivity implements LoaderCallba
         // to get the same functionality as ListActivity.
         FragmentManager fm = getSupportFragmentManager();
         
-        ListFragment list = new ListFragment();
         
-        FragmentTransaction ft = fm.beginTransaction();
-        ft.add(R.id.fragment_content, list);
-        ft.commit();
+        ListFragment list =(ListFragment) fm.findFragmentById(R.id.fragment_content); 
+        if (list == null){
+        	list = new ListFragment();
+        	FragmentTransaction ft = fm.beginTransaction();
+        	ft.add(R.id.fragment_content, list);
+        	ft.commit();
+        }
         
         mAdapter = new ArrayAdapter<String>(this, R.layout.item_label_list);
         
